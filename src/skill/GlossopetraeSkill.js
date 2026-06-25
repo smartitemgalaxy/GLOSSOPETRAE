@@ -367,6 +367,20 @@ class LanguageInterface {
   }
 
   /**
+   * Direct word-by-word translation — preserves word order, no parsing.
+   * Every word is translated individually. Works for any language.
+   * @param {string} text - Text to translate
+   * @returns {string} Conlang text
+   */
+  translateDirect(text) {
+    const translator = this.language.translationEngine || this.language.translator;
+    if (!translator) {
+      throw new Error('Translator not available');
+    }
+    return translator.translateDirect(text);
+  }
+
+  /**
    * Translate from the generated language back to English
    * @param {string} conlang - Text in the generated language
    * @returns {string} English translation

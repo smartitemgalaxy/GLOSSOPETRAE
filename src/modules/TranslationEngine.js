@@ -973,6 +973,42 @@ export class TranslationEngine {
   }
 
   /**
+   * Direct word-by-word translation — preserves original word order and ALL words.
+   * No parsing, no SOV restructuring, no grammatical extraction.
+   * Works for any language (English, French, etc.).
+   * Each word is translated individually via lexicon lookup + procedural generation.
+   */
+  translateDirect(text) {
+    if (!text || !text.trim()) return '';
+
+    const words = text.split(/\s+/).filter(Boolean);
+    const translated = [];
+
+    for (const word of words) {
+      const lower = word.toLowerCase();
+
+      // 1. Lexicon lookup (exact match)
+      const entry = this.lexicon?.lookup?.(lower);
+      if (entry) {
+        translated.push(entry.lemma);
+        continue;
+      }
+
+      // 2. Check unknown word cache (already generated this session)
+      if (this._unknownWordCache.has(lower)) {
+        translated.push(this._unknownWordCache.get(lower));
+        continue;
+      }
+
+      // 3. Generate procedurally
+      const generated = this._generateUnknownWord(word);
+      translated.push(generated);
+    }
+
+    return translated.join(' ');
+  }
+
+  /**
    * Translate from conlang to English (reverse lookup)
    */
   translateToEnglish(conlang) {

@@ -96,15 +96,16 @@ const server = createServer(async (req, res) => {
     if (cached) return json(res, 200, { ...cached, cached: true });
     try {
       const r = LANG.translateFull(text);
+      const direct = LANG.translateDirect(text);
       const out = {
         input: text,
-        output: r.target,
+        output: direct,
         gloss: r.gloss || '',
         stats: {
           inputLength: text.length,
-          outputLength: r.target.length,
-          invisibleChars: countInvisible(r.target),
-          wordCount: r.target.split(/\s+/).filter(Boolean).length,
+          outputLength: direct.length,
+          invisibleChars: countInvisible(direct),
+          wordCount: direct.split(/\s+/).filter(Boolean).length,
         },
       };
       setCache(key, out);

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLOSSOPETRAE Dashboard</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>GLOSSOPETRAE</h1>
+  <div class="header-badges">
+    <span class="badge badge-tkb">TKB</span>
+    <span class="badge badge-pht">PHT</span>
+    <span id="lang-name" class="header-info">Loading...</span>
+    <span id="lexicon-size" class="header-info">-- words</span>
+    <span id="server-uptime" class="header-info" title="Server uptime"></span>
+  </div>
+</header>
+
+<div class="main-grid">
+
+  <div class="col-left">
+    <div class="panel">
+      <h2>Input <span class="hint">English / French</span></h2>
+      <textarea id="input-text" placeholder="Enter text to translate...&#10;Ctrl+Enter to translate"></textarea>
+      <div class="btn-row">
+        <button id="btn-translate" class="btn btn-primary">Translate</button>
+        <button id="btn-clear" class="btn">Clear</button>
+        <button id="btn-reverse" class="btn" title="Reverse output back to English">&#x21C4; Reverse</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Output <span class="hint">GLOSSOPETRAE conlang</span></h2>
+      <textarea id="output-text" readonly placeholder="Translation will appear here..."></textarea>
+      <div class="btn-row">
+        <button id="btn-copy" class="btn btn-success">Copy</button>
+        <span class="copy-toast" id="copy-toast">Copied!</span>
+      </div>
+      <div id="gloss-block" class="gloss-block"></div>
+    </div>
+  </div>
+
+  <div class="col-right">
+    <div class="panel">
+      <h2>Encoding Stats</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-input-len">0</div>
+          <div class="stat-label">Input Chars</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-output-len">0</div>
+          <div class="stat-label">Output Chars</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value highlight" id="stat-invisible">0</div>
+          <div class="stat-label">Invisible Chars</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-words">0</div>
+          <div class="stat-label">Conlang Words</div>
+        </div>
+      </div>
+      <div id="reverse-block" class="reverse-block"></div>
+    </div>
+
+    <details class="panel" open>
+      <summary><h2>Grammar</h2></summary>
+      <div id="grammar-content" class="grammar-content">Loading...</div>
+    </details>
+  </div>
+</div>
+
+<div class="bottom-section">
+  <div class="tab-bar">
+    <button class="tab active" data-tab="lexicon">Lexicon</button>
+    <button class="tab" data-tab="expand">Expand Vocabulary</button>
+  </div>
+
+  <div id="tab-lexicon" class="tab-content panel">
+    <div class="lexicon-controls">
+      <input type="text" id="lexicon-search" class="search-input" placeholder="Search words...">
+      <span class="lexicon-total" id="lexicon-total"></span>
+    </div>
+    <div class="lexicon-table-wrap">
+      <table class="lexicon-table">
+        <thead>
+          <tr><th>Lemma</th><th>Gloss</th><th>Class</th><th>Field</th></tr>
+        </thead>
+        <tbody id="lexicon-body"></tbody>
+      </table>
+    </div>
+    <div class="lexicon-nav">
+      <button id="btn-prev-page" class="btn" disabled>Previous</button>
+      <span id="page-info">Page 1</span>
+      <button id="btn-next-page" class="btn">Next</button>
+    </div>
+  </div>
+
+  <div id="tab-expand" class="tab-content panel" style="display:none">
+    <p class="hint">Add new words (comma or newline separated). Useful for French vocabulary.</p>
+    <textarea id="expand-input" placeholder="chevalier, dragon, chateau, SIRET, IBAN" rows="3"></textarea>
+    <button id="btn-expand" class="btn btn-primary" style="margin-top:8px">Add to Lexicon</button>
+    <div id="expand-result" class="expand-result"></div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

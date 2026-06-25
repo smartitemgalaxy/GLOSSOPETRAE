@@ -2492,9 +2492,9 @@ export class TranslationEngine {
     else if (this.semanticDecomposition[cacheKey]) {
       result = this._buildCalque(cacheKey);
     }
-    // 4. Fall back to phonological transliteration
+    // 4. Fall back to pure procedural generation (NO phonetic transliteration)
     else {
-      result = this._transliterate(englishWord);
+      result = this._generateProcedural(englishWord);
     }
 
     // Cache the result
@@ -2506,21 +2506,60 @@ export class TranslationEngine {
    * Handle acronyms - spell out or adapt phonologically
    */
   _handleAcronym(acronym) {
-    // For short acronyms (2-3 letters), spell out each letter
-    if (acronym.length <= 3) {
-      const letters = acronym.toLowerCase().split('');
-      return letters.map(l => this._transliterate(l + 'a')).join('');
-    }
-    // For longer acronyms, treat as a word and transliterate
-    return this._transliterate(acronym);
+    return this._generateProcedural(acronym);
   }
 
   /**
    * Handle proper nouns - preserve or adapt minimally
    */
   _handleProperNoun(name) {
-    // Proper nouns get light adaptation - just phonological mapping
-    return this._transliterate(name);
+    return this._generateProcedural(name + 'proper');
+  }
+
+  /**
+   * Generate a truly novel word form using the language's phonotactics.
+   * Uses the input word as a deterministic seed — NO phonetic mapping,
+   * NO transliteration. The result shares no form with any living language.
+   */
+  _generateProcedural(seedWord) {
+    const phonology = this.language.phonology;
+    const phonotactics = this.language.phonotactics;
+
+    const consonants = phonology?.consonants || [];
+    const vowels = phonology?.vowels || [];
+
+    if (consonants.length === 0 || vowels.length === 0) {
+      return seedWord.toLowerCase();
+    }
+
+    // Deterministic seed from the input word
+    let seed = 0;
+    for (const char of seedWord) {
+      seed = ((seed << 5) - seed) + char.charCodeAt(0);
+      seed = seed & seed;
+    }
+    seed = Math.abs(seed);
+
+    // 1-3 syllables based on input length
+    const numSyllables = Math.min(3, Math.max(1, Math.ceil(seedWord.length / 3)));
+    let lemma = '';
+
+    for (let i = 0; i < numSyllables; i++) {
+      const cIdx = (seed + i * 7 + i * i * 3) % consonants.length;
+      const vIdx = (seed + i * 11 + i * i * 5) % vowels.length;
+
+      lemma += (consonants[cIdx].roman || consonants[cIdx]) +
+               (vowels[vIdx].roman || vowels[vIdx]);
+
+      // Coda consonant on some syllables
+      const codaMax = phonotactics?.syllableStructure?.maxCoda || 0;
+      if (codaMax > 0 && (seed + i * 3) % 5 < 3) {
+        const codaIdx = (seed + i * 13 + i * i * 7) % consonants.length;
+        lemma += consonants[codaIdx].roman || consonants[codaIdx];
+      }
+    }
+
+    return lemma;
   }
 
   /**
@@ -2529,7 +2568,7 @@ export class TranslationEngine {
   _buildCalque(word) {
     const components = this.semanticDecomposition[word];
     if (!components || components.length === 0) {
-      return this._transliterate(word);
+      return this._generateProcedural(word);
     }
 
     const parts = [];
@@ -2539,8 +2578,7 @@ export class TranslationEngine {
       if (entry) {
         parts.push(entry.lemma);
       } else {
-        // Transliterate the component
-        parts.push(this._transliterate(component));
+        parts.push(this._generateProcedural(component));
       }
     }
 
@@ -2550,144 +2588,6 @@ export class TranslationEngine {
     } else {
       return parts.join(' ');
     }
-  }
-
-  /**
-   * Phonologically transliterate a word using the language's sound system
-   */
-  _transliterate(englishWord) {
-    const phonology = this.language.phonology;
-    if (!phonology) return englishWord.toLowerCase();
-
-    const consonants = phonology.consonants?.map(c => c.ipa) || ['k', 't', 'p', 'n', 'm', 's'];
-    const vowels = phonology.vowels?.map(v => v.ipa) || ['a', 'e', 'i', 'o', 'u'];
-
-    // Map English sounds to available sounds
-    const soundMap = this._buildSoundMap(consonants, vowels);
-
-    let result = '';
-    const lowerWord = englishWord.toLowerCase();
-
-    for (let i = 0; i < lowerWord.length; i++) {
-      const char = lowerWord[i];
-      if (soundMap[char]) {
-        result += soundMap[char];
-      } else if (/[aeiou]/.test(char)) {
-        result += vowels[0];
-      } else if (/[a-z]/.test(char)) {
-        result += consonants[0];
-      }
-      // Skip non-letter characters
-    }
-
-    // Ensure the word follows the language's syllable structure
-    result = this._enforcePhonology(result, consonants, vowels);
-
-    return result || englishWord.toLowerCase();
-  }
-
-  /**
-   * Ensure a transliterated word follows basic phonological constraints
-   */
-  _enforcePhonology(word, consonants, vowels) {
-    if (!word) return word;
-
-    // Break up consonant clusters if the language prefers CV syllables
-    const phonotactics = this.language.phonotactics;
-    const maxOnset = phonotactics?.syllableStructure?.maxOnset || 2;
-    const maxCoda = phonotactics?.syllableStructure?.maxCoda || 1;
-
-    let result = '';
-    let consonantRun = 0;
-
-    for (let i = 0; i < word.length; i++) {
-      const char = word[i];
-      const isVowel = vowels.includes(char);
-
-      if (isVowel) {
-        result += char;
-        consonantRun = 0;
-      } else {
-        consonantRun++;
-        if (consonantRun > maxOnset && i < word.length - 1) {
-          // Insert a vowel to break up the cluster
-          result += vowels[0];
-          consonantRun = 1;
-        }
-        result += char;
-      }
-    }
-
-    // If word ends in too many consonants, add a vowel
-    const endConsonants = (result.match(/[^aeiouɑæəɛɪɔʊ]+$/i) || [''])[0].length;
-    if (endConsonants > maxCoda) {
-      result += vowels[0];
-    }
-
-    return result;
-  }
-
-  /**
-   * Build a mapping from English sounds to target language sounds
-   */
-  _buildSoundMap(consonants, vowels) {
-    const map = {};
-
-    // Vowels
-    const vowelFallbacks = {
-      'a': ['a', 'ɑ', 'æ', 'ə'],
-      'e': ['e', 'ɛ', 'ə', 'i'],
-      'i': ['i', 'ɪ', 'e'],
-      'o': ['o', 'ɔ', 'u', 'ə'],
-      'u': ['u', 'ʊ', 'o'],
-    };
-
-    for (const [eng, candidates] of Object.entries(vowelFallbacks)) {
-      for (const cand of candidates) {
-        if (vowels.includes(cand)) {
-          map[eng] = cand;
-          break;
-        }
-      }
-      if (!map[eng]) map[eng] = vowels[0];
-    }
-
-    // Consonants
-    const consonantFallbacks = {
-      'b': ['b', 'p', 'v'],
-      'c': ['k', 's', 't'],
-      'd': ['d', 't', 'n'],
-      'f': ['f', 'p', 'v'],
-      'g': ['g', 'k', 'ɡ'],
-      'h': ['h', 'x', 'ʔ'],
-      'j': ['dʒ', 'j', 'ʒ'],
-      'k': ['k', 'g', 'q'],
-      'l': ['l', 'r', 'n'],
-      'm': ['m', 'n', 'b'],
-      'n': ['n', 'm', 'ŋ'],
-      'p': ['p', 'b', 'f'],
-      'q': ['k', 'q', 'g'],
-      'r': ['r', 'l', 'ɾ'],
-      's': ['s', 'z', 'ʃ'],
-      't': ['t', 'd', 'k'],
-      'v': ['v', 'f', 'b'],
-      'w': ['w', 'v', 'u'],
-      'x': ['ks', 'k', 's'],
-      'y': ['j', 'i', 'ʝ'],
-      'z': ['z', 's', 'dz'],
-    };
-
-    for (const [eng, candidates] of Object.entries(consonantFallbacks)) {
-      for (const cand of candidates) {
-        if (consonants.includes(cand)) {
-          map[eng] = cand;
-          break;
-        }
-      }
-      if (!map[eng]) map[eng] = consonants[0];
-    }
-
-    return map;
   }
 
   /**

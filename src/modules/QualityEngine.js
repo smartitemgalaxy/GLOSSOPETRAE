@@ -79,16 +79,8 @@ export class QualityEngine {
       return generated;
     }
 
-    // Strategy 5: Phonetic transcription (last resort)
-    const transcribed = this._phoneticTranscription(word);
-    return {
-      success: true,
-      lemma: transcribed,
-      source: 'phonetic-transcription',
-      confidence: 0.3,
-      original: word,
-      note: 'Phonetically adapted from English',
-    };
+    // Strategy 5: Procedural generation (always works — never phonetic transcription)
+    return this._generateOnTheFly(word, pos);
   }
 
   _findSemanticallySimilar(word, pos) {
@@ -166,13 +158,10 @@ export class QualityEngine {
 
   _generateOnTheFly(word, pos) {
     // Generate a new word using the language's phonotactics
+    // Pure procedural generation — NO phonetic mapping
     const syllableTemplate = this.phonotactics?.template;
     const consonants = this.phonology?.consonants || [];
     const vowels = this.phonology?.vowels || [];
-
-    if (!syllableTemplate || consonants.length === 0 || vowels.length === 0) {
-      return null;
-    }
 
     // Use the word as a seed for deterministic generation
     let seed = 0;
@@ -182,21 +171,25 @@ export class QualityEngine {
     }
     seed = Math.abs(seed);
 
+    const cSet = consonants.length > 0 ? consonants : [{ roman: 'k' }, { roman: 't' }, { roman: 'p' }, { roman: 'n' }, { roman: 's' }, { roman: 'r' }];
+    const vSet = vowels.length > 0 ? vowels : [{ roman: 'a' }, { roman: 'e' }, { roman: 'i' }, { roman: 'o' }, { roman: 'u' }];
+    const codaMax = syllableTemplate?.codaMax || 1;
+
     // Generate 1-3 syllables based on word length
     const numSyllables = Math.min(3, Math.max(1, Math.ceil(word.length / 3)));
     let lemma = '';
 
     for (let i = 0; i < numSyllables; i++) {
-      // Simple CV syllable
-      const cIdx = (seed + i * 7) % consonants.length;
-      const vIdx = (seed + i * 11) % vowels.length;
+      const cIdx = (seed + i * 7 + i * i * 3) % cSet.length;
+      const vIdx = (seed + i * 11 + i * i * 5) % vSet.length;
 
-      lemma += consonants[cIdx].roman + vowels[vIdx].roman;
+      lemma += (cSet[cIdx].roman || cSet[cIdx]) +
+               (vSet[vIdx].roman || vSet[vIdx]);
 
-      // Optionally add coda consonant
-      if (syllableTemplate.codaMax > 0 && (seed + i) % 3 === 0) {
-        const codaIdx = (seed + i * 13) % consonants.length;
-        lemma += consonants[codaIdx].roman;
+      // Coda consonant on some syllables
+      if (codaMax > 0 && (seed + i * 3) % 5 < 3) {
+        const codaIdx = (seed + i * 13 + i * i * 7) % cSet.length;
+        lemma += cSet[codaIdx].roman || cSet[codaIdx];
       }
     }
 
@@ -209,50 +202,6 @@ export class QualityEngine {
       note: `Generated new word for "${word}"`,
       pos: pos || 'noun',
     };
-  }
-
-  _phoneticTranscription(word) {
-    // Convert English to approximate conlang phonology
-    const consonants = this.phonology?.consonants || [];
-    const vowels = this.phonology?.vowels || [];
-
-    // Build available sound sets
-    const availableC = new Set(consonants.map(c => c.roman));
-    const availableV = new Set(vowels.map(v => v.roman));
-
-    // Phonetic mappings
-    const cMap = {
-      'b': 'b', 'p': 'p', 'd': 'd', 't': 't', 'g': 'g', 'k': 'k',
-      'f': 'f', 'v': 'v', 's': 's', 'z': 'z', 'h': 'h', 'm': 'm',
-      'n': 'n', 'l': 'l', 'r': 'r', 'w': 'w', 'y': 'y', 'j': 'y',
-      'c': 'k', 'q': 'k', 'x': 'ks',
-    };
-
-    const vMap = {
-      'a': 'a', 'e': 'e', 'i': 'i', 'o': 'o', 'u': 'u',
-    };
-
-    let result = '';
-    for (const char of word.toLowerCase()) {
-      if (cMap[char]) {
-        const mapped = cMap[char];
-        if (availableC.has(mapped)) {
-          result += mapped;
-        } else if (availableC.has(mapped[0])) {
-          result += mapped[0];
-        }
-      } else if (vMap[char]) {
-        const mapped = vMap[char];
-        if (availableV.has(mapped)) {
-          result += mapped;
-        } else {
-          // Use first available vowel
-          result += vowels[0]?.roman || 'a';
-        }
-      }
-    }
-
-    return result || word.slice(0, 4);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

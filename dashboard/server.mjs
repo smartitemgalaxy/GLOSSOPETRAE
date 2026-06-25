@@ -16,6 +16,15 @@ const LANG = await GlossopetraeSkill.forge({
 });
 console.log(`Language ready: ${LANG.language.name}, ${LANG.info.lexiconSize} words`);
 
+const ENRICHED_PATH = resolve(__dirname, '..', 'data', 'enriched_lexicon.json');
+let ENRICHED_LEXICON = null;
+try {
+  ENRICHED_LEXICON = JSON.parse(readFileSync(ENRICHED_PATH, 'utf-8'));
+  console.log(`Enriched lexicon loaded: ${ENRICHED_LEXICON.length} entries`);
+} catch {
+  console.log('No enriched lexicon found, using base lexicon');
+}
+
 const cache = new Map();
 const MAX_CACHE = 500;
 
@@ -138,7 +147,8 @@ const server = createServer(async (req, res) => {
     const page = Math.max(1, parseInt(parsed.searchParams.get('page')) || 1);
     const limit = Math.min(200, Math.max(1, parseInt(parsed.searchParams.get('limit')) || 50));
     const search = (parsed.searchParams.get('search') || '').toLowerCase();
-    let entries = LANG.getLexicon()
+    const source = ENRICHED_LEXICON || LANG.getLexicon();
+    let entries = source
       .filter(e => e.lemma && e.gloss)
       .map(e => ({ lemma: e.lemma, gloss: e.gloss, class: e.class, field: e.field || '' }));
     if (search) entries = entries.filter(e => e.lemma.toLowerCase().includes(search) || e.gloss.toLowerCase().includes(search));

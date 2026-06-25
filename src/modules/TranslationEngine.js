@@ -2499,6 +2499,10 @@ export class TranslationEngine {
 
     // Cache the result
     this._unknownWordCache.set(cacheKey, result);
+    // Also register in reverse cache so translateBack() can decode it
+    if (result && !this._reverseCache.has(result)) {
+      this._reverseCache.set(result, { lemma: result, gloss: englishWord, class: 'noun' });
+    }
     return result;
   }
 
@@ -2654,11 +2658,17 @@ export class TranslationEngine {
   }
 
   _stripAffixes(word) {
+    const findStem = (stem) => {
+      const e = this.lexicon?.getEntries?.().find(x => x.lemma === stem);
+      if (e) return e;
+      return this._reverseCache.get(stem) || null;
+    };
+
     // Try stripping case suffixes
     for (const cas of this.morphology.nominal.caseSystem.cases) {
       if (cas.suffix && word.endsWith(cas.suffix)) {
         const stem = word.slice(0, -cas.suffix.length);
-        const entry = this.lexicon?.getEntries?.().find(e => e.lemma === stem);
+        const entry = findStem(stem);
         if (entry) {
           return { lemma: entry.lemma, gloss: `${entry.gloss}-${cas.abbr}` };
         }
@@ -2669,7 +2679,7 @@ export class TranslationEngine {
     for (const num of this.morphology.nominal.numberSystem.categories) {
       if (num.suffix && word.endsWith(num.suffix)) {
         const stem = word.slice(0, -num.suffix.length);
-        const entry = this.lexicon?.getEntries?.().find(e => e.lemma === stem);
+        const entry = findStem(stem);
         if (entry) {
           return { lemma: entry.lemma, gloss: `${entry.gloss}-${num.abbr}` };
         }
@@ -2680,7 +2690,7 @@ export class TranslationEngine {
     for (const tense of this.morphology.verbal.tenses.tenses) {
       if (tense.suffix && word.endsWith(tense.suffix)) {
         const stem = word.slice(0, -tense.suffix.length);
-        const entry = this.lexicon?.getEntries?.().find(e => e.lemma === stem);
+        const entry = findStem(stem);
         if (entry) {
           return { lemma: entry.lemma, gloss: `${entry.gloss}-${tense.abbr}` };
         }
@@ -2693,7 +2703,7 @@ export class TranslationEngine {
       for (const marker of agreement.subjectMarkers) {
         if (marker.affix && word.endsWith(marker.affix)) {
           const stem = word.slice(0, -marker.affix.length);
-          const entry = this.lexicon?.getEntries?.().find(e => e.lemma === stem);
+          const entry = findStem(stem);
           if (entry) {
             return { lemma: entry.lemma, gloss: `${entry.gloss}-${marker.label}` };
           }

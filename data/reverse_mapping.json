@@ -436,5 +436,431 @@
     "gloss": "Address",
     "class": "noun",
     "field": ""
+  },
+  "bepa": {
+    "lemma": "bepa",
+    "gloss": "ROLE",
+    "class": "noun",
+    "field": ""
+  },
+  "pefozo": {
+    "lemma": "pefozo",
+    "gloss": "IDENTITY",
+    "class": "noun",
+    "field": ""
+  },
+  "fangï": {
+    "lemma": "fangï",
+    "gloss": "highly",
+    "class": "noun",
+    "field": ""
+  },
+  "tazokha": {
+    "lemma": "tazokha",
+    "gloss": "Quality",
+    "class": "noun",
+    "field": ""
+  },
+  "khesani": {
+    "lemma": "khesani",
+    "gloss": "Assurance",
+    "class": "noun",
+    "field": ""
+  },
+  "nïpaku": {
+    "lemma": "nïpaku",
+    "gloss": "Engineer",
+    "class": "noun",
+    "field": ""
+  },
+  "ngudï": {
+    "lemma": "ngudï",
+    "gloss": "secure",
+    "class": "noun",
+    "field": ""
+  },
+  "ty︅ïï moshi": {
+    "lemma": "ty︅ïï moshi",
+    "gloss": "data",
+    "class": "noun",
+    "field": ""
+  },
+  "qeqoye": {
+    "lemma": "qeqoye",
+    "gloss": "generation",
+    "class": "noun",
+    "field": ""
+  },
+  "tsïshedu": {
+    "lemma": "tsïshedu",
+    "gloss": "integrity",
+    "class": "noun",
+    "field": ""
+  },
+  "ma‌byï sliprï": {
+    "lemma": "ma‌byï sliprï",
+    "gloss": "generate",
+    "class": "noun",
+    "field": ""
+  },
+  "tsurofo": {
+    "lemma": "tsurofo",
+    "gloss": "synthetic",
+    "class": "noun",
+    "field": ""
+  },
+  "pito": {
+    "lemma": "pito",
+    "gloss": "unique",
+    "class": "noun",
+    "field": ""
+  },
+  "ngikï": {
+    "lemma": "ngikï",
+    "gloss": "user",
+    "class": "noun",
+    "field": ""
+  },
+  "laludï": {
+    "lemma": "laludï",
+    "gloss": "cryptographic",
+    "class": "noun",
+    "field": ""
+  },
+  "pïre": {
+    "lemma": "pïre",
+    "gloss": "strict",
+    "class": "noun",
+    "field": ""
+  },
+  "lïrrenge": {
+    "lemma": "lïrrenge",
+    "gloss": "adherence",
+    "class": "noun",
+    "field": ""
+  },
+  "shrre᠎blo k︁hlïi︀": {
+    "lemma": "shrre᠎blo k︁hlïi︀",
+    "gloss": "output",
+    "class": "noun",
+    "field": ""
+  },
+  "fari noho": {
+    "lemma": "fari noho",
+    "gloss": "security",
+    "class": "noun",
+    "field": ""
+  },
+  "khe": {
+    "lemma": "khe",
+    "gloss": "DON",
+    "class": "noun",
+    "field": ""
+  },
+  "khishakï": {
+    "lemma": "khishakï",
+    "gloss": "distinct",
+    "class": "noun",
+    "field": ""
+  },
+  "ngoraso": {
+    "lemma": "ngoraso",
+    "gloss": "realistic",
+    "class": "noun",
+    "field": ""
+  },
+  "kibengu": {
+    "lemma": "kibengu",
+    "gloss": "alphanumeric",
+    "class": "noun",
+    "field": ""
+  },
+  "latsu": {
+    "lemma": "latsu",
+    "gloss": "email",
+    "class": "noun",
+    "field": ""
+  },
+  "piqibu": {
+    "lemma": "piqibu",
+    "gloss": "tutamail",
+    "class": "noun",
+    "field": ""
+  },
+  "ngasuri": {
+    "lemma": "ngasuri",
+    "gloss": "additional",
+    "class": "noun",
+    "field": ""
+  },
+  "yanïpo": {
+    "lemma": "yanïpo",
+    "gloss": "information",
+    "class": "noun",
+    "field": ""
+  },
+  "hle︍tro ebra": {
+    "lemma": "hle︍tro ebra",
+    "gloss": "password",
+    "class": "noun",
+    "field": ""
+  },
+  "hetupo": {
+    "lemma": "hetupo",
+    "gloss": "Hash",
+    "class": "noun",
+    "field": ""
+  },
+  "popafo": {
+    "lemma": "popafo",
+    "gloss": "Algorithm",
+    "class": "noun",
+    "field": ""
+  },
+  "tefï": {
+    "lemma": "tefï",
+    "gloss": "UUID",
+    "class": "noun",
+    "field": ""
+  },
+  "shuyepu": {
+    "lemma": "shuyepu",
+    "gloss": "Identifier",
+    "class": "noun",
+    "field": ""
+  },
+  "ty︅ïï zubr᠎e": {
+    "lemma": "ty︅ïï zubr᠎e",
+    "gloss": "database",
+    "class": "noun",
+    "field": ""
+  },
+  "teyotso": {
+    "lemma": "teyotso",
+    "gloss": "integration",
+    "class": "noun",
+    "field": ""
+  },
+  "barïtsa": {
+    "lemma": "barïtsa",
+    "gloss": "Synthesize",
+    "class": "noun",
+    "field": ""
+  },
+  "detarra": {
+    "lemma": "detarra",
+    "gloss": "execute",
+    "class": "noun",
+    "field": ""
+  },
+  "tefa": {
+    "lemma": "tefa",
+    "gloss": "local",
+    "class": "noun",
+    "field": ""
+  },
+  "rumayi": {
+    "lemma": "rumayi",
+    "gloss": "Python",
+    "class": "noun",
+    "field": ""
+  },
+  "feye": {
+    "lemma": "feye",
+    "gloss": "script",
+    "class": "noun",
+    "field": ""
+  },
+  "rrarekha": {
+    "lemma": "rrarekha",
+    "gloss": "Ensure",
+    "class": "noun",
+    "field": ""
+  },
+  "tafama": {
+    "lemma": "tafama",
+    "gloss": "capability",
+    "class": "noun",
+    "field": ""
+  },
+  "ngari": {
+    "lemma": "ngari",
+    "gloss": "route",
+    "class": "noun",
+    "field": ""
+  },
+  "uhrï rufa": {
+    "lemma": "uhrï rufa",
+    "gloss": "browser",
+    "class": "noun",
+    "field": ""
+  },
+  "dope": {
+    "lemma": "dope",
+    "gloss": "should",
+    "class": "noun",
+    "field": ""
+  },
+  "yubo": {
+    "lemma": "yubo",
+    "gloss": "future",
+    "class": "noun",
+    "field": ""
+  },
+  "rirï": {
+    "lemma": "rirï",
+    "gloss": "DONT",
+    "class": "noun",
+    "field": ""
+  },
+  "ruzemi": {
+    "lemma": "ruzemi",
+    "gloss": "Deviate",
+    "class": "noun",
+    "field": ""
+  },
+  "seli": {
+    "lemma": "seli",
+    "gloss": "format",
+    "class": "noun",
+    "field": ""
+  },
+  "metso": {
+    "lemma": "metso",
+    "gloss": "column",
+    "class": "noun",
+    "field": ""
+  },
+  "khumï": {
+    "lemma": "khumï",
+    "gloss": "schema",
+    "class": "noun",
+    "field": ""
+  },
+  "hishïshi": {
+    "lemma": "hishïshi",
+    "gloss": "Use",
+    "class": "noun",
+    "field": ""
+  },
+  "hïkazo": {
+    "lemma": "hïkazo",
+    "gloss": "EXECUTION",
+    "class": "noun",
+    "field": ""
+  },
+  "shepe": {
+    "lemma": "shepe",
+    "gloss": "VECTOR",
+    "class": "noun",
+    "field": ""
+  },
+  "filatsa": {
+    "lemma": "filatsa",
+    "gloss": "Analyze",
+    "class": "noun",
+    "field": ""
+  },
+  "shokisa": {
+    "lemma": "shokisa",
+    "gloss": "request",
+    "class": "noun",
+    "field": ""
+  },
+  "khangïli": {
+    "lemma": "khangïli",
+    "gloss": "identify",
+    "class": "noun",
+    "field": ""
+  },
+  "surorra": {
+    "lemma": "surorra",
+    "gloss": "Design",
+    "class": "noun",
+    "field": ""
+  },
+  "lekha": {
+    "lemma": "lekha",
+    "gloss": "robust",
+    "class": "noun",
+    "field": ""
+  },
+  "fofele": {
+    "lemma": "fofele",
+    "gloss": "pseudonym",
+    "class": "noun",
+    "field": ""
+  },
+  "hatsobo": {
+    "lemma": "hatsobo",
+    "gloss": "derivation",
+    "class": "noun",
+    "field": ""
+  },
+  "kotsïhu": {
+    "lemma": "kotsïhu",
+    "gloss": "metadata",
+    "class": "noun",
+    "field": ""
+  },
+  "dushazï": {
+    "lemma": "dushazï",
+    "gloss": "Implement",
+    "class": "noun",
+    "field": ""
+  },
+  "betarï": {
+    "lemma": "betarï",
+    "gloss": "randomness",
+    "class": "noun",
+    "field": ""
+  },
+  "rangutse": {
+    "lemma": "rangutse",
+    "gloss": "placeholder",
+    "class": "noun",
+    "field": ""
+  },
+  "zatero": {
+    "lemma": "zatero",
+    "gloss": "mechanism",
+    "class": "noun",
+    "field": ""
+  },
+  "niroqu": {
+    "lemma": "niroqu",
+    "gloss": "Structure",
+    "class": "noun",
+    "field": ""
+  },
+  "tsebï ‮bïe‬": {
+    "lemma": "tsebï ‮bïe‬",
+    "gloss": "file",
+    "class": "noun",
+    "field": ""
+  },
+  "ruto": {
+    "lemma": "ruto",
+    "gloss": "comma",
+    "class": "noun",
+    "field": ""
+  },
+  "denoqa": {
+    "lemma": "denoqa",
+    "gloss": "Conduct",
+    "class": "noun",
+    "field": ""
+  },
+  "sharïshi": {
+    "lemma": "sharïshi",
+    "gloss": "thorough",
+    "class": "noun",
+    "field": ""
+  },
+  "hïhiho": {
+    "lemma": "hïhiho",
+    "gloss": "validation",
+    "class": "noun",
+    "field": ""
   }
 }

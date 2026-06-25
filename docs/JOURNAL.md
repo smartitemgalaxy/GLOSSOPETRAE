@@ -1,5 +1,31 @@
 # GLOSSOPETRAE — Session Journal
 
+## 2026-06-26 (session 2) — translateDirect + Full DB Connection for Mode B
+
+### Done this session
+- Created `scripts/lookup_conlang.mjs`: fast lemma↔gloss lookup against 7,334-entry enriched_lexicon.json with invisible char stripping and suffix-aware decode mode
+- Fixed TranslationEngine reverse cache: generated words now registered in `_reverseCache` so `translateBack()` can find them
+- Fixed `_stripAffixes()`: now checks `_reverseCache` alongside `lexicon.entries` when looking up stripped stems
+- Created `translateDirect()`: word-by-word translation that bypasses the English-only parser, preserving word order/count and all semantic content for any language (French/English)
+- Exposed `translateDirect()` in GlossopetraeSkill
+- Updated dashboard `/api/translate`: output uses `translateDirect`, gloss keeps `translateFull`
+- Updated SKILL.md: Mode A uses `translateDirect`, Mode B uses engine `translateBack()` connected to full DB, mini-lexicon kept as reference only
+- Root cause confirmed: tokenizer is English-only — all French words fall to "noun" by default, making `translateFull` drop >80% of words on complex French prompts
+
+### Technical decisions
+- `translateDirect()`: lexicon lookup → unknownWordCache → `_generateUnknownWord()` (which itself checks acronym/properNoun/calque/procedural)
+- Mode B decoding: `_stripAffixes` uses a `findStem()` helper that checks BOTH lexicon.entries AND _reverseCache
+- `_generateUnknownWord()` now calls `this._reverseCache.set(result, ...)` to register every generated word for reverse lookup
+- PHT+TKB invisible chars stripped via code-point range check (U+200B-F, U+202A-E, U+2060-9, U+FE00-F, U+E0000-E007F, U+FEFF, U+00AD, U+200C-D)
+
+### Files touched
+- `src/modules/TranslationEngine.js` (+translateDirect, +reverseCache registration, +findStem helper in _stripAffixes)
+- `src/skill/GlossopetraeSkill.js` (+translateDirect)
+- `dashboard/server.mjs` (/api/translate output now uses translateDirect)
+- `scripts/lookup_conlang.mjs` (created)
+- `~/.claude/skills/decouple/SKILL.md` (Mode A/B rewritten)
+- `docs/JOURNAL.md` (modified)
+
 ## 2026-06-26 — Phonetic Transliteration Purged + Enterprise Words + Regenerated Lexicon
 
 ### Done this session

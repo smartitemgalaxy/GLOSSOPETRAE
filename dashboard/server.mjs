@@ -21,6 +21,8 @@ let ENRICHED_LEXICON = null;
 try {
   ENRICHED_LEXICON = JSON.parse(readFileSync(ENRICHED_PATH, 'utf-8'));
   console.log(`Enriched lexicon loaded: ${ENRICHED_LEXICON.length} entries`);
+  const n = LANG.loadEnrichedLexicon(ENRICHED_LEXICON);
+  console.log(`Pushed ${n} enriched entries into engine reverse cache`);
 } catch {
   console.log('No enriched lexicon found, using base lexicon');
 }

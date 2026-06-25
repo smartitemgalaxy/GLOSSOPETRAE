@@ -394,6 +394,18 @@ class LanguageInterface {
   }
 
   /**
+   * Load enriched lexicon entries into the engine's reverse cache
+   * so translateBack() can find them. Call before translateBack().
+   * @param {Array} entries - Array of { lemma, gloss, class, field }
+   * @returns {number} Number of entries added
+   */
+  loadEnrichedLexicon(entries) {
+    const translator = this.language.translationEngine || this.language.translator;
+    if (!translator) throw new Error('Translator not available');
+    return translator.loadReverseEntries(entries);
+  }
+
+  /**
    * Encode a message for transmission
    * @param {string} message - Plain English message
    * @param {Object} options - Encoding options

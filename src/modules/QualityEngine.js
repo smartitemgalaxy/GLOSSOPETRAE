@@ -163,33 +163,26 @@ export class QualityEngine {
     const consonants = this.phonology?.consonants || [];
     const vowels = this.phonology?.vowels || [];
 
-    // Use the word as a seed for deterministic generation
-    let seed = 0;
+    // Mulberry32 PRNG — independent random values per phoneme, no modulo collapse
+    let s = 0;
     for (const char of word) {
-      seed = ((seed << 5) - seed) + char.charCodeAt(0);
-      seed = seed & seed;
+      s = ((s << 5) - s) + char.charCodeAt(0) | 0;
     }
-    seed = Math.abs(seed);
+    const rng = this._mulberry32(Math.abs(s));
 
     const cSet = consonants.length > 0 ? consonants : [{ roman: 'k' }, { roman: 't' }, { roman: 'p' }, { roman: 'n' }, { roman: 's' }, { roman: 'r' }];
     const vSet = vowels.length > 0 ? vowels : [{ roman: 'a' }, { roman: 'e' }, { roman: 'i' }, { roman: 'o' }, { roman: 'u' }];
     const codaMax = syllableTemplate?.codaMax || 1;
 
-    // Generate 1-3 syllables based on word length
     const numSyllables = Math.min(3, Math.max(1, Math.ceil(word.length / 3)));
     let lemma = '';
 
     for (let i = 0; i < numSyllables; i++) {
-      const cIdx = (seed + i * 7 + i * i * 3) % cSet.length;
-      const vIdx = (seed + i * 11 + i * i * 5) % vSet.length;
+      lemma += (cSet[Math.floor(rng() * cSet.length)].roman || cSet[0]) +
+               (vSet[Math.floor(rng() * vSet.length)].roman || vSet[0]);
 
-      lemma += (cSet[cIdx].roman || cSet[cIdx]) +
-               (vSet[vIdx].roman || vSet[vIdx]);
-
-      // Coda consonant on some syllables
-      if (codaMax > 0 && (seed + i * 3) % 5 < 3) {
-        const codaIdx = (seed + i * 13 + i * i * 7) % cSet.length;
-        lemma += cSet[codaIdx].roman || cSet[codaIdx];
+      if (codaMax > 0 && rng() < 0.6) {
+        lemma += cSet[Math.floor(rng() * cSet.length)].roman || cSet[0];
       }
     }
 
@@ -201,6 +194,15 @@ export class QualityEngine {
       original: word,
       note: `Generated new word for "${word}"`,
       pos: pos || 'noun',
+    };
+  }
+
+  _mulberry32(a) {
+    return function() {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
 
@@ -1079,8 +1081,9 @@ ${entries.slice(0, 100).map(e => `${e.lemma} & ${e.gloss} & ${e.class} \\\\`).jo
     const pos = options.pos || this._inferPOS(word);
     const field = options.field || this._inferSemanticField(word);
 
-    // Generate lemma using fallback system
-    const result = this.getWordWithFallback(word, pos);
+    // Always generate a unique procedural word — skip semantic similarity
+    // to guarantee lemma uniqueness for reliable reverse lookup
+    const result = this._generateOnTheFly(word, pos);
 
     return {
       lemma: result.lemma,

@@ -8,6 +8,15 @@
  * semantic decomposition (calques), and consistent unknown word generation
  */
 
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const DATA_DIR = resolve(__dirname, '..', '..', 'data');
+const REVERSE_MAPPING_PATH = resolve(DATA_DIR, 'reverse_mapping.json');
+
 export class TranslationEngine {
   constructor(language) {
     this.language = language;
@@ -17,15 +26,35 @@ export class TranslationEngine {
     // Build reverse lookup cache for faster translation from conlang
     this._buildReverseLookup();
 
+    // Load persisted reverse mappings so runtime-generated words survive restarts
+    this._loadReverseMappings();
+
     // Cache for unknown word mappings (ensures consistency)
     this._unknownWordCache = new Map();
+
+    // Thai alphabet: last 10 letters (positions 35-44 of 44 consonants)
+    // Last=0, second-to-last=1, ..., 10th-from-last=9
+    this._numberToThai = { '0':'ฮ', '1':'อ', '2':'ฬ', '3':'ห', '4':'ส', '5':'ษ', '6':'ศ', '7':'ว', '8':'ล', '9':'ร' };
+    this._thaiToNumber = Object.fromEntries(Object.entries(this._numberToThai).map(([k,v]) => [v,k]));
+
+    // Chinese character symbols
+    this._symbolToChinese = {
+      '&':'和', '%':'分', '@':'址', '$':'元', '£':'镑', '€':'欧',
+      '#':'号', '*':'星', '+':'加', '=':'等', '<':'小', '>':'大',
+      '~':'约', '^':'幂', '|':'或', '\\':'反', '_':'底',
+      '[':'左', ']':'右', '{':'开', '}':'闭',
+    };
+    this._chineseToSymbol = Object.fromEntries(Object.entries(this._symbolToChinese).map(([k,v]) => [v,k]));
+
+    // Punctuation preserved as-is
+    this._preservedPunct = new Set(['.', ',', ';', ':', '?', '!', '/', '(', ')', '-', '‘', '’', '"', '«', '»', '…']);
 
     // Semantic decomposition mappings (English concept -> component words)
     // Used for calque-style translation of technical terms
     this.semanticDecomposition = {
       // Technology
       'computer': ['think', 'machine'], 'software': ['mind', 'tool'], 'hardware': ['body', 'tool'],
-      'internet': ['world', 'web'], 'website': ['place', 'web'], 'email': ['letter', 'fast'],
+      'internet': ['world', 'web'], 'website': ['place', 'web'],
       'download': ['take', 'down'], 'upload': ['give', 'up'], 'database': ['knowledge', 'house'],
       'server': ['give', 'machine'], 'network': ['web', 'path'], 'algorithm': ['think', 'path'],
       'program': ['command', 'list'], 'code': ['secret', 'word'], 'data': ['knowledge', 'piece'],
@@ -425,6 +454,64 @@ export class TranslationEngine {
         }
       }
     }
+  }
+
+  /**
+   * Load persisted reverse mappings from disk into the reverse cache.
+   * These are lemma→gloss mappings generated at runtime by translateDirect()
+   * and persisted so translateBack() can decode them across sessions.
+   */
+  _loadReverseMappings() {
+    try {
+      const raw = readFileSync(REVERSE_MAPPING_PATH, 'utf-8');
+      const data = JSON.parse(raw);
+      for (const [lemma, entry] of Object.entries(data)) {
+        if (!this._reverseCache.has(lemma)) {
+          this._reverseCache.set(lemma, entry);
+        }
+      }
+    } catch {
+      // File doesn't exist yet — first run
+    }
+  }
+
+  /**
+   * Persist a lemma→gloss mapping to the shared reverse mapping file.
+   * Best-effort — failures are silent (disk full, permissions, etc.).
+   */
+  _persistReverseMapping(lemma, gloss, wordClass = 'noun') {
+    try {
+      let data = {};
+      try {
+        const raw = readFileSync(REVERSE_MAPPING_PATH, 'utf-8');
+        data = JSON.parse(raw);
+      } catch {
+        // File doesn't exist yet — start fresh
+      }
+      if (!data[lemma]) {
+        data[lemma] = { lemma, gloss, class: wordClass, field: '' };
+        mkdirSync(DATA_DIR, { recursive: true });
+        writeFileSync(REVERSE_MAPPING_PATH, JSON.stringify(data, null, 2));
+      }
+    } catch {
+      // Best-effort persistence
+    }
+  }
+
+  /**
+   * Load external entries into the reverse cache for translateBack() lookup.
+   * Each entry: { lemma, gloss, class, field }
+   */
+  loadReverseEntries(entries) {
+    if (!entries || !entries.length) return 0;
+    let added = 0;
+    for (const e of entries) {
+      if (e.lemma && e.gloss && !this._reverseCache.has(e.lemma)) {
+        this._reverseCache.set(e.lemma, { lemma: e.lemma, gloss: e.gloss, class: e.class || 'noun', field: e.field || '' });
+        added++;
+      }
+    }
+    return added;
   }
 
   // ===================================================================
@@ -984,25 +1071,47 @@ export class TranslationEngine {
     const words = text.split(/\s+/).filter(Boolean);
     const translated = [];
 
-    for (const word of words) {
-      const lower = word.toLowerCase();
+    for (const rawWord of words) {
+      // Character-level processing: translate alphabetic runs,
+      // encode digits/symbols to Thai/Chinese, preserve punctuation
+      let out = '';
+      let alphaRun = '';
 
-      // 1. Lexicon lookup (exact match)
-      const entry = this.lexicon?.lookup?.(lower);
-      if (entry) {
-        translated.push(entry.lemma);
-        continue;
+      const flushAlpha = () => {
+        if (!alphaRun) return;
+        const lower = alphaRun.toLowerCase();
+        // Lexicon lookup
+        const entry = this.lexicon?.lookup?.(lower);
+        if (entry) {
+          out += entry.lemma;
+        } else if (this._unknownWordCache.has(lower)) {
+          out += this._unknownWordCache.get(lower);
+        } else {
+          out += this._generateUnknownWord(alphaRun, { persist: true });
+        }
+        alphaRun = '';
+      };
+
+      for (const ch of rawWord) {
+        if (ch >= '0' && ch <= '9') {
+          flushAlpha();
+          out += this._numberToThai[ch] || ch;
+        } else if (this._symbolToChinese[ch]) {
+          flushAlpha();
+          out += this._symbolToChinese[ch];
+        } else if (/[a-zA-Zà-ÿÀ-ß]/.test(ch)) {
+          alphaRun += ch;
+        } else {
+          // Punctuation or other — preserve as-is
+          flushAlpha();
+          out += ch;
+        }
       }
+      flushAlpha();
 
-      // 2. Check unknown word cache (already generated this session)
-      if (this._unknownWordCache.has(lower)) {
-        translated.push(this._unknownWordCache.get(lower));
-        continue;
+      if (out) {
+        translated.push(out);
       }
-
-      // 3. Generate procedurally
-      const generated = this._generateUnknownWord(word);
-      translated.push(generated);
     }
 
     return translated.join(' ');
@@ -1015,16 +1124,83 @@ export class TranslationEngine {
     const words = conlang.split(/\s+/);
     const translations = [];
 
-    for (const word of words) {
-      const analysis = this._analyzeWord(word);
-      if (analysis) {
-        translations.push(analysis.gloss);
-      } else {
-        translations.push(`[${word}]`);
+    for (const rawWord of words) {
+      // Character-level decoding: split conlang word into
+      // conlang runs (decode via reverseCache), Thai runs (→ digits),
+      // Chinese chars (→ symbols), and punctuation (preserved)
+      let out = '';
+      let conlangRun = '';
+
+      const flushConlang = () => {
+        if (!conlangRun) return;
+        const analysis = this._analyzeWord(conlangRun);
+        if (analysis) {
+          out += analysis.gloss;
+        } else {
+          out += `[${conlangRun}]`;
+        }
+        conlangRun = '';
+      };
+
+      for (const ch of rawWord) {
+        if (this._thaiToNumber[ch]) {
+          flushConlang();
+          out += this._thaiToNumber[ch];
+        } else if (this._chineseToSymbol[ch]) {
+          flushConlang();
+          out += this._chineseToSymbol[ch];
+        } else if (this._preservedPunct.has(ch) || /^[\x00-\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]$/.test(ch)) {
+          // ASCII punctuation/symbols — preserve as-is, flush conlang run first
+          flushConlang();
+          out += ch;
+        } else {
+          // Conlang character (Latin, diacritics, invisible chars, etc.)
+          conlangRun += ch;
+        }
+      }
+      flushConlang();
+
+      if (out) {
+        translations.push(out);
       }
     }
 
     return translations.join(' ');
+  }
+
+  /**
+   * Encode digits → Thai letters, symbols → Chinese characters.
+   * Preserves punctuation unchanged.
+   */
+  _encodeNumbersAndSymbols(text) {
+    let out = '';
+    for (const ch of text) {
+      if (ch >= '0' && ch <= '9') {
+        out += this._numberToThai[ch] || ch;
+      } else if (this._symbolToChinese[ch]) {
+        out += this._symbolToChinese[ch];
+      } else {
+        out += ch;
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Decode Thai letters → digits, Chinese characters → symbols.
+   */
+  _decodeNumbersAndSymbols(text) {
+    let out = '';
+    for (const ch of text) {
+      if (this._thaiToNumber[ch]) {
+        out += this._thaiToNumber[ch];
+      } else if (this._chineseToSymbol[ch]) {
+        out += this._chineseToSymbol[ch];
+      } else {
+        out += ch;
+      }
+    }
+    return out;
   }
 
   /**
@@ -2507,7 +2683,7 @@ export class TranslationEngine {
    * Generate a phonologically-plausible form for unknown words
    * Uses semantic decomposition (calques), caching, and phonological adaptation
    */
-  _generateUnknownWord(englishWord) {
+  _generateUnknownWord(englishWord, { persist } = {}) {
     // Check cache first for consistency
     const cacheKey = englishWord.toLowerCase();
     if (this._unknownWordCache.has(cacheKey)) {
@@ -2538,6 +2714,11 @@ export class TranslationEngine {
     // Also register in reverse cache so translateBack() can decode it
     if (result && !this._reverseCache.has(result)) {
       this._reverseCache.set(result, { lemma: result, gloss: englishWord, class: 'noun' });
+      // Persist to shared file so future sessions can decode this word.
+      // Only persist translateDirect() calls, not internal grammar words.
+      if (persist) {
+        this._persistReverseMapping(result, englishWord);
+      }
     }
     return result;
   }
@@ -2572,34 +2753,36 @@ export class TranslationEngine {
       return seedWord.toLowerCase();
     }
 
-    // Deterministic seed from the input word
-    let seed = 0;
+    // Mulberry32 PRNG — independent random values per phoneme, no modulo collapse
+    let s = 0;
     for (const char of seedWord) {
-      seed = ((seed << 5) - seed) + char.charCodeAt(0);
-      seed = seed & seed;
+      s = ((s << 5) - s) + char.charCodeAt(0) | 0;
     }
-    seed = Math.abs(seed);
+    const rng = this._mulberry32(Math.abs(s));
 
-    // 1-3 syllables based on input length
     const numSyllables = Math.min(3, Math.max(1, Math.ceil(seedWord.length / 3)));
     let lemma = '';
 
     for (let i = 0; i < numSyllables; i++) {
-      const cIdx = (seed + i * 7 + i * i * 3) % consonants.length;
-      const vIdx = (seed + i * 11 + i * i * 5) % vowels.length;
+      lemma += (consonants[Math.floor(rng() * consonants.length)].roman || consonants[0]) +
+               (vowels[Math.floor(rng() * vowels.length)].roman || vowels[0]);
 
-      lemma += (consonants[cIdx].roman || consonants[cIdx]) +
-               (vowels[vIdx].roman || vowels[vIdx]);
-
-      // Coda consonant on some syllables
       const codaMax = phonotactics?.syllableStructure?.maxCoda || 0;
-      if (codaMax > 0 && (seed + i * 3) % 5 < 3) {
-        const codaIdx = (seed + i * 13 + i * i * 7) % consonants.length;
-        lemma += consonants[codaIdx].roman || consonants[codaIdx];
+      if (codaMax > 0 && rng() < 0.6) {
+        lemma += consonants[Math.floor(rng() * consonants.length)].roman || consonants[0];
       }
     }
 
     return lemma;
+  }
+
+  _mulberry32(a) {
+    return function() {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
   }
 
   /**

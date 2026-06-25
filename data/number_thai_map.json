@@ -1,0 +1,16 @@
+{
+  "description": "Digit → Thai alphabet letter mapping. Uses the LAST 10 letters of the 44-consonant Thai alphabet, where last=0, second-to-last=1, etc.",
+  "direction": "encode (digit → thai)",
+  "mapping": {
+    "0": { "thai": "ฮ", "name": "ho nok-huk", "position": 44, "unicode": "U+0E2E" },
+    "1": { "thai": "อ", "name": "o ang",       "position": 43, "unicode": "U+0E2D" },
+    "2": { "thai": "ฬ", "name": "lo chu-la",   "position": 42, "unicode": "U+0E2C" },
+    "3": { "thai": "ห", "name": "ho hip",      "position": 41, "unicode": "U+0E2B" },
+    "4": { "thai": "ส", "name": "so suea",     "position": 40, "unicode": "U+0E2A" },
+    "5": { "thai": "ษ", "name": "so rue-si",   "position": 39, "unicode": "U+0E29" },
+    "6": { "thai": "ศ", "name": "so sala",     "position": 38, "unicode": "U+0E28" },
+    "7": { "thai": "ว", "name": "wo waen",     "position": 37, "unicode": "U+0E27" },
+    "8": { "thai": "ล", "name": "lo ling",     "position": 36, "unicode": "U+0E25" },
+    "9": { "thai": "ร", "name": "ro ruea",     "position": 35, "unicode": "U+0E23" }
+  }
+}

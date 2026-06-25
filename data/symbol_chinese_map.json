@@ -1,0 +1,28 @@
+{
+  "description": "Symbol → Chinese character mapping for GLOSSOPETRAE conlang",
+  "direction": "encode (symbol → chinese)",
+  "mapping": {
+    "&": { "chinese": "和", "pinyin": "hé", "meaning": "and", "unicode": "U+548C" },
+    "%": { "chinese": "分", "pinyin": "fēn", "meaning": "percent/divide", "unicode": "U+5206" },
+    "@": { "chinese": "址", "pinyin": "zhǐ", "meaning": "address", "unicode": "U+5740" },
+    "$": { "chinese": "元", "pinyin": "yuán", "meaning": "dollar/currency", "unicode": "U+5143" },
+    "£": { "chinese": "镑", "pinyin": "bàng", "meaning": "pound sterling", "unicode": "U+9551" },
+    "€": { "chinese": "欧", "pinyin": "ōu", "meaning": "euro", "unicode": "U+6B27" },
+    "#": { "chinese": "号", "pinyin": "hào", "meaning": "number", "unicode": "U+53F7" },
+    "*": { "chinese": "星", "pinyin": "xīng", "meaning": "star/asterisk", "unicode": "U+661F" },
+    "+": { "chinese": "加", "pinyin": "jiā", "meaning": "plus", "unicode": "U+52A0" },
+    "=": { "chinese": "等", "pinyin": "děng", "meaning": "equals", "unicode": "U+7B49" },
+    "<": { "chinese": "小", "pinyin": "xiǎo", "meaning": "less than", "unicode": "U+5C0F" },
+    ">": { "chinese": "大", "pinyin": "dà", "meaning": "greater than", "unicode": "U+5927" },
+    "~": { "chinese": "约", "pinyin": "yuē", "meaning": "approximately", "unicode": "U+7EA6" },
+    "^": { "chinese": "幂", "pinyin": "mì", "meaning": "power/exponent", "unicode": "U+5E42" },
+    "|": { "chinese": "或", "pinyin": "huò", "meaning": "or/pipe", "unicode": "U+6216" },
+    "\\": { "chinese": "反", "pinyin": "fǎn", "meaning": "reverse/backslash", "unicode": "U+53CD" },
+    "_": { "chinese": "底", "pinyin": "dǐ", "meaning": "underscore/base", "unicode": "U+5E95" },
+    "[": { "chinese": "左", "pinyin": "zuǒ", "meaning": "left bracket", "unicode": "U+5DE6" },
+    "]": { "chinese": "右", "pinyin": "yòu", "meaning": "right bracket", "unicode": "U+53F3" },
+    "{": { "chinese": "开", "pinyin": "kāi", "meaning": "open brace", "unicode": "U+5F00" },
+    "}": { "chinese": "闭", "pinyin": "bì", "meaning": "close brace", "unicode": "U+95ED" }
+  },
+  "preserved_punctuation": [".", ",", ";", ":", "?", "!", "/", "(", ")", "-", "'", "\"", "«", "»", "…"]
+}
